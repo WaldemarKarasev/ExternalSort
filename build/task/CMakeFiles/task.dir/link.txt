@@ -1,0 +1,1 @@
+/usr/bin/c++ CMakeFiles/task.dir/file.cpp.o CMakeFiles/task.dir/io_device.cpp.o CMakeFiles/task.dir/main.cpp.o -o task 
