@@ -9,7 +9,7 @@ int main()
     
     io::TapeFile::buffer_type nums;
 
-    file.Read(nums, 2);
+    file.Read(nums, 10);
 
     nums.push_back(7777);
     for (auto num : nums)

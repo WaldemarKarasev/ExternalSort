@@ -15,22 +15,42 @@ TapeFile::TapeFile(std::filesystem::path tape_path, nlohmann::json settings_json
 void TapeFile::Read(buffer_type& dst, size_type size)
 {
     std::cout << "TapeFile::Read()" << std::endl;
-    device_.Read(dst, size);
+     
+    dst.clear(); // clear destination buffer
+    for (size_type i = 0; i < size; ++i)
+    {
+        auto cell = device_.ReadCurrentCell();
+        if (cell.has_value())
+        {
+            dst.push_back(cell.value());
+        }
+        device_.MoveMagnetHeadRight();
+        if (device_.EndOfLine())
+        {
+            break;
+        }
+    }      
 }
 
 void TapeFile::Write(buffer_type& src, size_type size)
 {
-    device_.Write(src, size);
+    std::cout << "TapeFile::Write()" << std::endl;
+    
+    for (size_type i = 0; i < size; ++i)
+    {
+        device_.WriteCurrentCell(src[i]);
+        device_.MoveMagnetHeadRight();
+    }
 }
 
 TapeFile::size_type TapeFile::Tellp()
 {
-    return device_.Tellp();
+    return device_.GetMagnetHeadPosition();
 }
 
 void TapeFile::Seekp(size_type pos)
 {
-    device_.Seekp(pos);
+    device_.RewindMagnetHead(pos);
 }
 
 } // namespace io

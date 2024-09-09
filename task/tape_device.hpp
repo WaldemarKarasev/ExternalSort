@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <filesystem>
+#include <optional>
 
 // nlohmann 
 #include <nlohmann/json.hpp>
@@ -17,31 +18,41 @@ class TapeDevice
 public:
     using buffer_type = std::vector<int>;
     using size_type = std::size_t;
+    using streampos = size_type;
+
+    enum class State
+    {
+        normal = 0,
+        eof
+    };
+private: 
+    State state_ = State::normal;
 
 public:
     TapeDevice(std::filesystem::path path, nlohmann::json settings_json);
+    ~TapeDevice() { Close(); }
+
+    // Open/Close operations
     void Open();
-    void Read(buffer_type& dst, size_type size);
-    void Write(buffer_type& src, size_type size);
-    void Close();
-
-    void Seekp(size_type pos); // setting magnet head to specific position in file
-    size_type Tellp(); // tell position of the magnet head
-
+    void Open(std::filesystem::path);
     inline bool IsOpen() { return file_.is_open(); }
-
-
-    void Open();
     void Close();
+
+    inline bool EndOfLine() { return state_ == State::eof; }
+
+    // Magnet head operations
     void MoveMagnetHeadRight();
     void MoveMagnetHeadLeft();
-    void ReqindMagnetHead(); // move seekp to std::ios::end in this stage of implementation
-    int ReadCurrentCell();
+    void RewindMagnetHead(streampos pos = 0); // move seekp to std::ios::end in this stage of implementation, by default this funciton will rewind magnet head to the begining of the tape
+    size_type GetMagnetHeadPosition(); // tell position of the magnet head
+
+    // Cell operations
+    std::optional<int> ReadCurrentCell();
     void WriteCurrentCell(int data);
 
 private:
-    void WriteToFile(); // implementaion which requires extra space
-    void ReadFromFile();  // implementaion which requires extra space
+    // Service functions
+    // ...
 
 private:
     std::chrono::milliseconds read_latency_{0};
@@ -61,7 +72,7 @@ private:
     std::filesystem::path path_;
     std::fstream file_;
 
-    buffer_type tape_buffer_;
+    char cell_delim_ = ' '; // for cell delimitation in file. All cells should be ended(closed) with this symbol
     size_type magnet_head_pos_{0};
 
     nlohmann::json settings_json_;

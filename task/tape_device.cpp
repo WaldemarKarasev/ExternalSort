@@ -15,133 +15,103 @@ TapeDevice::TapeDevice(std::filesystem::path path, nlohmann::json settings_json)
 
 void TapeDevice::Open()
 {
-    ReadFromFile();
+    file_.open(path_, std::ios::in | std::ios::out);
 }
-
-void TapeDevice::Read(buffer_type& dst, size_type size)
+void TapeDevice::Open(std::filesystem::path path)
 {
-    std::cout << "TapeDevice::Read()" << std::endl;
-
-    size_type size_to_read = size;
-
-    if (size_to_read > tape_buffer_.size())
-    {
-        size_to_read = tape_buffer_.size();
-    }
-
-    dst.clear(); // clear destination buffer
-    for (size_type i = 0; i < size_to_read; ++i)
-    {
-        dst.push_back(tape_buffer_[i]);
-        ReadLatency();
-        magnet_head_pos_ += 1;
-        MoveLatency(1);
-    }
+    path_ = std::move(path);
+    Open();
 }
-
-void TapeDevice::Write(buffer_type& src, size_type size)
-{
-    std::cout << "Write()" << std::endl;
-
-    size_type size_to_write = src.size();
-
-    if (size_to_write > (tape_buffer_.size() - magnet_head_pos_))
-    {
-        tape_buffer_.reserve(tape_buffer_.size() + (size_to_write - (tape_buffer_.size() - magnet_head_pos_)));
-    }
-    
-    for (size_type i = magnet_head_pos_, j = 0; j < src.size(); ++i, ++j)
-    {
-        tape_buffer_[i] = src[j]; // back inserter
-        WriteLatency();
-        magnet_head_pos_ += 1;
-        MoveLatency(1);
-    }
-
-    WriteToFile();
-}
-
-
-
-void TapeDevice::WriteToFile()
-{
-    file_.open(path_, std::ios::in | std::ios::trunc);
-    PrintFileState();
-    if (file_.is_open())
-    {
-        for (auto elem : tape_buffer_)
-        {
-            std::string num_str = std::to_string(elem) + "\n";
-            file_.write(num_str.c_str(), num_str.size());
-        }
-    }
-}
-
-void TapeDevice::ReadFromFile()
-{
-    std::cout << "TapeDevice::ReadFromFile" << std::endl;
-    char number[20]; // for int32 20 symbols are more than enough
-    tape_buffer_.clear();
-    file_.open(path_, std::ios::out | std::ios::in);
-    if (file_.is_open())
-    {
-        while(file_.getline(number, 20))
-        {   
-            try
-            {
-                int num = std::stoi(number);
-                std::cout << "number str=" << number << "; num=" << num << std::endl;
-                tape_buffer_.push_back(num);
-            }
-            catch(const std::exception& e)
-            {
-                std::cerr << e.what() << '\n';
-            }
-            if(file_.eof())
-            {
-                break;
-            }
-        }
-    }
-    else
-    {
-        std::cout << "fail" << std::endl;
-    }
-}
-
 void TapeDevice::Close()
 {
     file_.close();
 }
 
-void TapeDevice::Seekp(size_type pos)
+// Magnet head operations
+void TapeDevice::MoveMagnetHeadRight()
 {
-    if (pos > tape_buffer_.size())
+    if (state_ == State::eof)
     {
-        auto steps = tape_buffer_.size() - magnet_head_pos_;
-        magnet_head_pos_ = tape_buffer_.size();
-        MoveLatency(steps);
+        file_.clear();
+        ++magnet_head_pos_;
     }
-    else
-    {
-        size_type steps;
-        if (pos > magnet_head_pos_)
-        {   
-            steps = pos - magnet_head_pos_;
-        }
-        else
-        {
-            steps = magnet_head_pos_ - pos;
-        }
 
-        magnet_head_pos_ = pos;
-        MoveLatency(steps);
+    char number[20];
+    file_.getline(number, sizeof(number), cell_delim_);
+    if (file_.eof())
+    {
+        state_ = State::eof;
     }
+
+    ++magnet_head_pos_;
+
+    MoveLatency(1);
 }
 
-TapeDevice::size_type TapeDevice::Tellp()
+TapeDevice::size_type TapeDevice::GetMagnetHeadPosition() // tell position of the magnet head
 {
     return magnet_head_pos_;
+}
+
+// Cell operations
+std::optional<int> TapeDevice::ReadCurrentCell()
+{
+    std::cout << "ReadCurrentCell()" << std::endl;
+
+    if (state_ == State::eof)
+    {
+        return std::nullopt;
+    }
+    
+    // return value
+    std::optional<int> cell_value;
+
+    // Remembering prev std::fstream streampos for current "cell"
+    auto prev_pos = file_.tellp();
+
+    char number[20];
+    file_.getline(number, sizeof(number), cell_delim_);
+    try {
+        cell_value = std::stoi(number);
+        std::cout << "cell_str=" << number << "; cell_value=" << cell_value.value() << std::endl;
+    }
+    catch(const std::exception& e)
+    {
+        std::cerr << e.what() << '\n';
+    }
+    if(file_.eof())
+    {
+        std::cout << "eof detected" << std::endl;
+        state_ = State::eof;
+    }
+
+    // Moving back streampos for std::fstream back for correct logic
+    file_.seekp(prev_pos);
+
+    ReadLatency();
+    PrintFileState();
+
+    return cell_value;
+}
+void TapeDevice::WriteCurrentCell(int data)
+{
+    if (state_ == State::eof)
+    {
+        file_.clear();
+    }
+    
+    // Remembering prev std::fstream streampos for current "cell"
+    auto prev_pos = file_.tellp();
+    
+    // Writing serialized data into std::fstream
+    std::cout << "TapeDevice::WriteCurrentCell(" << std::to_string(data) << ")" << std::endl;
+    std::string serialized_data = std::to_string(data) + " ";
+    file_.write(serialized_data.c_str(), serialized_data.size());
+    
+    // Moving back streampos for std::fstream back for correct logic
+    file_.seekp(prev_pos);
+    
+    WriteLatency();
 }
 
 static void Wait(std::chrono::milliseconds wait_time)
@@ -163,7 +133,6 @@ void TapeDevice::MoveLatency(size_type cell_count)
 {
     Wait(move_latency_ * cell_count);
 }
-
 
 void TapeDevice::PrintFileState()
 {
@@ -207,4 +176,93 @@ void TapeDevice::ConfigureDevice(const nlohmann::json& settings_json)
     }
 }
 
+void TapeDevice::MoveMagnetHeadLeft()
+{
+    // Not implemented. Not nessesary for current iteration and implementing External sort algorithm
+    MoveLatency(1);
+}
+void TapeDevice::RewindMagnetHead(streampos pos) // move seekp to std::ios::end in this stage of implementation
+{
+    // Not implemented. Not nessesary for current iteration and implementing External sort algorithm
+    #if 0
+    if (state_ == State::eof && pos > magnet_head_pos_)
+    {
+        magnet_head_pos_ = magnet_head_pos_;
+    }
+    if (pos > magnet_head_pos_)
+    {
+        auto steps = pos - magnet_head_pos_;
+        magnet_head_pos_ = pos;
+        state_ = State::eof;
+        MoveLatency(steps);
+    }
+    else
+    {
+        size_type steps;
+        if (pos > magnet_head_pos_)
+        {   
+            steps = pos - magnet_head_pos_;
+        }
+        else
+        {
+            steps = magnet_head_pos_ - pos;
+        }
+
+        magnet_head_pos_ = pos;
+        MoveLatency(steps);
+    }
+    #endif
+}
+
 } // namespace io
+
+
+void WriteToFile()
+{
+    #if 0
+    file_.open(path_, std::ios::in | std::ios::trunc);
+    PrintFileState();
+    if (file_.is_open())
+    {
+        for (auto elem : tape_buffer_)
+        {
+            std::string num_str = std::to_string(elem) + "\n";
+            file_.write(num_str.c_str(), num_str.size());
+        }
+    }
+    #endif
+}
+
+void ReadFromFile()
+{
+    #if 0
+    std::cout << "TapeDevice::ReadFromFile" << std::endl;
+    char number[20]; // for int32 20 symbols are more than enough
+    tape_buffer_.clear();
+    file_.open(path_, std::ios::out | std::ios::in);
+    if (file_.is_open())
+    {
+        while(file_.getline(number, 20))
+        {   
+            try
+            {
+                int num = std::stoi(number);
+                std::cout << "number str=" << number << "; num=" << num << std::endl;
+                tape_buffer_.push_back(num);
+            }
+            catch(const std::exception& e)
+            {
+                std::cerr << e.what() << '\n';
+            }
+            if(file_.eof())
+            {
+                break;
+            }
+        }
+    }
+    else
+    {
+        std::cout << "fail" << std::endl;
+    }
+    #endif
+}
