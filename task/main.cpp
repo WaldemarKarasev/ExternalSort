@@ -1,7 +1,6 @@
 #include <iostream>
 
-#include <file.hpp>
-#include <io_device.hpp>
+#include <tape_file.hpp>
 #include <vector>
 int main()
 {
