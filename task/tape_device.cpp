@@ -35,12 +35,18 @@ void TapeDevice::MoveMagnetHeadRightRead()
     char number[20];
     file_.getline(number, sizeof(number), cell_delim_);
 
+    auto prev_pos = file_.tellp();
+    file_.get(); // try eof ????
     if (file_.eof())
     {
+        PrintFileState();
+        file_.clear();
+        file_.setstate(std::ios_base::eofbit);
         PrintFileState();
     }
     else
     {
+        file_.seekp(prev_pos);
         PrintFileState();
         ++magnet_head_pos_;
     }
