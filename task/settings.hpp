@@ -12,9 +12,23 @@
 
 namespace settings {
 
-extern nlohmann::json global_settings;
+extern nlohmann::json global;
 
 const std::filesystem::path settings_path = "settings.conf";
+
+
+inline nlohmann::json ParseJsonFromFile(std::filesystem::path path)
+{
+    nlohmann::json read_json;
+    try {
+        std::ifstream file(path);
+        read_json = nlohmann::json::parse(file);
+        
+    } catch (const nlohmann::detail::parse_error &err) {
+        return nlohmann::json::object();
+    }
+    return read_json;
+}
 
 inline nlohmann::json ReadSettings()
 {
@@ -30,19 +44,6 @@ inline nlohmann::json ReadSettings()
     }
 
     return settings_json;
-}
-
-inline nlohmann::json ParseJsonFromFile(std::filesystem::path path)
-{
-    nlohmann::json read_json;
-    try {
-        std::ifstream file(path);
-        read_json = nlohmann::json::parse(file);
-        
-    } catch (const nlohmann::detail::parse_error &err) {
-        return nlohmann::json::object();
-    }
-    return read_json;
 }
 
 } // namespace settings

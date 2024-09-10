@@ -20,28 +20,23 @@ public:
     using size_type = std::size_t;
     using streampos = size_type;
 
-    enum class State
-    {
-        normal = 0,
-        eof
-    };
-private: 
-    State state_ = State::normal;
 
 public:
     TapeDevice(std::filesystem::path path, const nlohmann::json& settings_json);
     ~TapeDevice() { Close(); }
 
     // Open/Close operations
-    void Open();
-    void Open(std::filesystem::path);
+    void Open(std::ios::openmode mode = std::ios::in | std::ios::out);
+    void Open(std::filesystem::path, std::ios::openmode mode = std::ios::in | std::ios::out);
     inline bool IsOpen() { return file_.is_open(); }
     void Close();
 
-    inline bool EndOfLine() { return state_ == State::eof; }
+    inline bool EndOfLine() { return file_.eof(); }
 
     // Magnet head operations
-    void MoveMagnetHeadRight();
+    void MoveMagnetHeadRightRead();
+    void MoveMagnetHeadRightWrite();
+
     void MoveMagnetHeadLeft();
     void RewindMagnetHead(streampos pos = 0); // move seekp to std::ios::end in this stage of implementation, by default this funciton will rewind magnet head to the begining of the tape
     size_type GetMagnetHeadPosition(); // tell position of the magnet head

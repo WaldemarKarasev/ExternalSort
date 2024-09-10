@@ -11,8 +11,9 @@
 // nlohmann
 #include <nlohmann/json.hpp>
 
-//
+// tape include
 #include <tape_device.hpp>
+#include <settings.hpp>
 
 namespace io {
 
@@ -43,7 +44,7 @@ public:
 class TapeFile : public File
 {
 public:
-    TapeFile(std::filesystem::path tape_path, const nlohmann::json& device_settings);
+    TapeFile(std::filesystem::path tape_path, std::ios::openmode mode = std::ios::in | std::ios::out, const nlohmann::json& device_settings = settings::global);
     
     // virtual void Open(std::ios::openmode mode = std::ios::in | std::ios::out);
     // virtual void Open(std::filesystem::path, std::ios::openmode mode = std::ios::in | std::ios::out);
