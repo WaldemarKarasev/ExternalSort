@@ -6,11 +6,10 @@
 
 namespace io {
 
-TapeDevice::TapeDevice(std::filesystem::path path, nlohmann::json settings_json)
+TapeDevice::TapeDevice(std::filesystem::path path, const nlohmann::json& settings_json)
     : path_{std::move(path)}
-    , settings_json_(std::move(settings_json))
 {
-    ConfigureDevice(settings_json_);
+    ConfigureDevice(settings_json);
 }
 
 void TapeDevice::Open()
@@ -25,6 +24,9 @@ void TapeDevice::Open(std::filesystem::path path)
 void TapeDevice::Close()
 {
     file_.close();
+
+    // When closing device magnet head moves to the begining of the Tape (moves to index 0))
+    MoveLatency(magnet_head_pos_);
 }
 
 // Magnet head operations
@@ -146,7 +148,7 @@ void TapeDevice::ConfigureDevice(const nlohmann::json& settings_json)
         !settings_json["read_latency"].is_null() && 
           settings_json["read_latency"].is_number_integer())
     {
-        read_latency_ = std::chrono::milliseconds(settings_json_["read_latency"].get<int>());
+        read_latency_ = std::chrono::milliseconds(settings_json["read_latency"].get<int>());
     }
     else
     {
@@ -157,7 +159,7 @@ void TapeDevice::ConfigureDevice(const nlohmann::json& settings_json)
         !settings_json["write_latency"].is_null() &&
          settings_json["write_latency"].is_number_integer())
     {
-        write_letency_ = std::chrono::milliseconds(settings_json_["write_latency"].get<int>());
+        write_letency_ = std::chrono::milliseconds(settings_json["write_latency"].get<int>());
     }
     else
     {
@@ -168,7 +170,7 @@ void TapeDevice::ConfigureDevice(const nlohmann::json& settings_json)
         !settings_json["move_latency"].is_null() &&
          settings_json["move_latency"].is_number_integer())
     {
-        move_latency_ = std::chrono::milliseconds(settings_json_["move_latency"].get<int>());
+        move_latency_ = std::chrono::milliseconds(settings_json["move_latency"].get<int>());
     }
     else
     {
@@ -183,6 +185,15 @@ void TapeDevice::MoveMagnetHeadLeft()
 }
 void TapeDevice::RewindMagnetHead(streampos pos) // move seekp to std::ios::end in this stage of implementation
 {
+    if (pos == 0)
+    {
+        // Move to the begining. This used only when algorithm needs to rewrite all data in the tape
+        // that's why in this implementation TapeDevice will erase all data from file
+        // to avoid aliasing of new and old data in file
+        file_.open(path_, std::ios::in | std::ios::in | std::ios::trunc);
+        MoveLatency(magnet_head_pos_);
+        magnet_head_pos_ = 0;
+    }
     // Not implemented. Not nessesary for current iteration and implementing External sort algorithm
     #if 0
     if (state_ == State::eof && pos > magnet_head_pos_)
@@ -215,54 +226,3 @@ void TapeDevice::RewindMagnetHead(streampos pos) // move seekp to std::ios::end 
 }
 
 } // namespace io
-
-
-void WriteToFile()
-{
-    #if 0
-    file_.open(path_, std::ios::in | std::ios::trunc);
-    PrintFileState();
-    if (file_.is_open())
-    {
-        for (auto elem : tape_buffer_)
-        {
-            std::string num_str = std::to_string(elem) + "\n";
-            file_.write(num_str.c_str(), num_str.size());
-        }
-    }
-    #endif
-}
-
-void ReadFromFile()
-{
-    #if 0
-    std::cout << "TapeDevice::ReadFromFile" << std::endl;
-    char number[20]; // for int32 20 symbols are more than enough
-    tape_buffer_.clear();
-    file_.open(path_, std::ios::out | std::ios::in);
-    if (file_.is_open())
-    {
-        while(file_.getline(number, 20))
-        {   
-            try
-            {
-                int num = std::stoi(number);
-                std::cout << "number str=" << number << "; num=" << num << std::endl;
-                tape_buffer_.push_back(num);
-            }
-            catch(const std::exception& e)
-            {
-                std::cerr << e.what() << '\n';
-            }
-            if(file_.eof())
-            {
-                break;
-            }
-        }
-    }
-    else
-    {
-        std::cout << "fail" << std::endl;
-    }
-    #endif
-}

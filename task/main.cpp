@@ -1,9 +1,47 @@
-#include <iostream>
+/*
 
-#include <tape_file.hpp>
+    JSON settings for tape device and memory usage 
+    Example:
+    {
+        "read_latency_ms":      100, // 100ms
+        "write_latency_ms":     100, // 100ms   
+        "move_latency_ms":      100, // 100ms
+        "mem_usage_percentages": 90  // The size of the RAM avaliable for use by this process is 90% of the input tape size
+    }
+
+*/
+
+// std
+#include <stdlib.h>
+#include <iostream>
 #include <vector>
-int main()
+#include <filesystem>
+
+
+static std::string settings_path = "settings.config";
+
+// user
+#include <tape_file.hpp>
+
+#include <settings.hpp>
+extern nlohmann::json global_settings;
+
+int main(int argc, char* argv[])
 {
+    if (argc < 3)
+    {
+        std::cout << "Usage: e_sort input_tape output_tape" << std::endl;
+        return EXIT_FAILURE;
+    }
+
+    global_settings = settings::ReadSettings();
+
+    std::filesystem::path input_tape_path{argv[1]};
+    std::filesystem::path output_tape_path{argv[2]};
+
+    std::cout << "input_tape_path  - " << input_tape_path << std::endl;
+    std::cout << "output_tape_path - " << output_tape_path << std::endl;
+
     // test
     io::TapeFile file("numbers.txt", std::ios::in | std::ios::out);
     

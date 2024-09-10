@@ -5,9 +5,9 @@
 
 namespace io {
 
-TapeFile::TapeFile(std::filesystem::path tape_path, nlohmann::json settings_json)
+TapeFile::TapeFile(std::filesystem::path tape_path, const nlohmann::json& settings_json)
     : File()
-    , device_(std::move(tape_path), std::move(settings_json))
+    , device_(std::move(tape_path), settings_json)
 {
     device_.Open();
 }

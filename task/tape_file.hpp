@@ -36,13 +36,14 @@ public:
     virtual void Seekp(size_type pos) = 0; // return value void or should be *this as in the STL
     virtual size_type Tellp() = 0;
 
+    virtual bool Eof() = 0;
     // virtual bool IsOpen() = 0;
 };
 
 class TapeFile : public File
 {
 public:
-    TapeFile(std::filesystem::path tape_path, nlohmann::json device_settings);
+    TapeFile(std::filesystem::path tape_path, const nlohmann::json& device_settings);
     
     // virtual void Open(std::ios::openmode mode = std::ios::in | std::ios::out);
     // virtual void Open(std::filesystem::path, std::ios::openmode mode = std::ios::in | std::ios::out);
@@ -52,6 +53,10 @@ public:
 
     virtual void Seekp(size_type pos) override; // return value void or should be *this as in the STL
     virtual size_type Tellp() override;
+
+    // eof
+    virtual bool Eof() { return device_.EndOfLine(); }
+
 
 private:
     TapeDevice device_;

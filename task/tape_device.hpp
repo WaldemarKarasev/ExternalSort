@@ -29,7 +29,7 @@ private:
     State state_ = State::normal;
 
 public:
-    TapeDevice(std::filesystem::path path, nlohmann::json settings_json);
+    TapeDevice(std::filesystem::path path, const nlohmann::json& settings_json);
     ~TapeDevice() { Close(); }
 
     // Open/Close operations
@@ -72,10 +72,8 @@ private:
     std::filesystem::path path_;
     std::fstream file_;
 
-    char cell_delim_ = ' '; // for cell delimitation in file. All cells should be ended(closed) with this symbol
+    static constexpr char cell_delim_ = ' '; // for cell delimitation in file. All cells should be ended(closed) with this symbol
     size_type magnet_head_pos_{0};
-
-    nlohmann::json settings_json_;
 };
 
 } // namespace io
