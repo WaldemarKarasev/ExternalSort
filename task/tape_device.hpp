@@ -25,6 +25,12 @@ public:
     TapeDevice(std::filesystem::path path, const nlohmann::json& settings_json);
     ~TapeDevice() { Close(); }
 
+    TapeDevice(const TapeDevice&) = default;
+    TapeDevice& operator=(const TapeDevice&) = default;
+
+    TapeDevice(TapeDevice&&) = default;
+    TapeDevice& operator=(TapeDevice&&) = default;
+
     // Open/Close operations
     void Open(std::ios::openmode mode = std::ios::in | std::ios::out);
     void Open(std::filesystem::path, std::ios::openmode mode = std::ios::in | std::ios::out);

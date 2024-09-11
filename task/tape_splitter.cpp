@@ -38,7 +38,7 @@ std::tuple<std::filesystem::path, std::size_t> TapeSplitter::Split()
     {
         io::TapeFile::buffer_type batch_buf;
         input_tape.Read(batch_buf, available_ram);
-        
+        std::cout << "input_tape.Eof()-" << input_tape.Eof() << "; input_tape.IsOpen()-" << input_tape.IsOpen() << std::endl;
         for (auto elem : batch_buf)
         {
             std::cout << elem << " ";
@@ -63,14 +63,23 @@ std::tuple<std::filesystem::path, std::size_t> TapeSplitter::Split()
 std::size_t TapeSplitter::GetInputTapeSize()
 {
     io::TapeFile input_tape(input_file_path_);
-
     std::size_t tape_size = 0;
-    io::TapeFile::buffer_type tmp_buf;
-
-    while (!input_tape.Eof())
+    if (input_tape.IsOpen())
     {
-        input_tape.Read(tmp_buf, 1);
-        ++tape_size;
+        io::TapeFile::buffer_type tmp_buf;
+
+        while (!input_tape.Eof())
+        {
+            input_tape.Read(tmp_buf, 1);
+            std::cout << "ASDASDAS" << std::endl;
+            std::cout << tmp_buf.empty() << std::endl;
+            
+            ++tape_size;
+        }
+    }
+    else 
+    {
+        std::cout << "failed to open file" << std::endl;
     }
 
     return tape_size;

@@ -39,15 +39,15 @@ void TapeDevice::MoveMagnetHeadRightRead()
     file_.get(); // try eof ????
     if (file_.eof())
     {
-        PrintFileState();
+        // PrintFileState();
         file_.clear();
         file_.setstate(std::ios_base::eofbit);
-        PrintFileState();
+        // PrintFileState();
     }
     else
     {
         file_.seekp(prev_pos);
-        PrintFileState();
+        // PrintFileState();
         ++magnet_head_pos_;
     }
 
@@ -97,11 +97,11 @@ std::optional<int> TapeDevice::ReadCurrentCell()
     file_.getline(number, sizeof(number), cell_delim_);
     try {
         cell_value = std::stoi(number);
-        std::cout << "cell_str=\"" << number << "\"; cell_value=" << cell_value.value() << std::endl;
+        // std::cout << "cell_str=\"" << number << "\"; cell_value=" << cell_value.value() << std::endl;
     }
     catch(const std::exception& e)
     {
-        std::cerr << "cell_str - \"" << number << "\"; " <<  e.what() << '\n';
+        // std::cerr << "cell_str - \"" << number << "\"; " <<  e.what() << '\n';
     }
 
     // Moving back streampos for std::fstream back for correct logic
@@ -119,7 +119,7 @@ void TapeDevice::WriteCurrentCell(int data)
     auto prev_pos = file_.tellp();
     
     // Writing serialized data into std::fstream
-    std::cout << "TapeDevice::WriteCurrentCell(" << std::to_string(data) << ")" << std::endl;
+    // std::cout << "TapeDevice::WriteCurrentCell(" << std::to_string(data) << ")" << std::endl;
     std::string serialized_data = std::to_string(data) + " ";
     file_.write(serialized_data.c_str(), serialized_data.size());
 
