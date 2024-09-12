@@ -1,9 +1,8 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.11)
 
 project(task CXX C)
 
 set(CMAKE_CXX_STANDARD 20)
-
 
 include(FetchContent)
 FetchContent_Declare(
@@ -11,10 +10,6 @@ FetchContent_Declare(
     URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
 )
 FetchContent_MakeAvailable(json)
-# FetchContent_GetProperties(nlohmann)
-
-
-
 
 FetchContent_Declare(
   googletest
@@ -22,10 +17,13 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(googletest)
 
+# building external_sort_lib
+add_subdirectory(lib) 
 
-include_directories(task)
-
+# building console utility 
 add_subdirectory(task)
 
+# building tests
+include(GoogleTest)
 enable_testing()
 add_subdirectory(test)

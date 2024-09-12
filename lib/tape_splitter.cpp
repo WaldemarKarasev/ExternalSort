@@ -11,40 +11,27 @@ TapeSplitter::TapeSplitter(std::filesystem::path& input_file, std::size_t ram_pe
 
 std::tuple<std::filesystem::path, std::size_t> TapeSplitter::Split()
 {
-    std::cout << "----------------SPLIT START-----------------" << std::endl;
-    std::cout << "----------------SPLIT GETSIZE-----------------" << std::endl;
+    // Getting size of the input TapeFile. Bad way to finding size of the file.
     input_tape_file_size_ = GetInputTapeSize();
-    std::cout << "----------------SPLIT SPLITTING-----------------" << std::endl;
 
-    std::cout << input_tape_file_size_ << std::endl;
     std::size_t available_ram = input_tape_file_size_ * ram_percentage_ / 100;
     
-    std::filesystem::path tmp_tape_path_ = std::filesystem::current_path() / "tapes/";
-
     if (!std::filesystem::exists(tmp_tape_path_))
     {
         if (!std::filesystem::create_directory(tmp_tape_path_))
         {
-            std::cout << "error creating temporary directory for temporary tapes" << std::endl;
+            std::cerr << "error creating temporary directory for temporary tapes" << std::endl;
             return {};
         }
     }
     
-    std::cout << "available_ram=" << available_ram << std::endl;
     io::TapeFile input_tape(input_file_path_);
-    std::cout << "start batching input file" << std::endl;
     std::size_t tmp_file_counter = 0;
     while (!input_tape.Eof())
     {
         io::TapeFile::buffer_type batch_buf;
         input_tape.Read(batch_buf, available_ram);
-        std::cout << "input_tape.Eof()-" << input_tape.Eof() << "; input_tape.IsOpen()-" << input_tape.IsOpen() << std::endl;
-        for (auto elem : batch_buf)
-        {
-            std::cout << elem << " ";
-        }
-        std::cout << std::endl;
-
+    
 
         std::filesystem::path tmp_file_path = tmp_tape_path_ / std::filesystem::path("file" + std::to_string(tmp_file_counter) + ".tape");
 
@@ -52,10 +39,6 @@ std::tuple<std::filesystem::path, std::size_t> TapeSplitter::Split()
         io::TapeFile tmp_file(tmp_file_path, std::ios::out);
         tmp_file.Write(batch_buf, batch_buf.size());
     }
-
-
-    std::cout << "----------------SPLIT END-----------------" << std::endl;
-
 
     return {tmp_tape_path_, available_ram};
 }
@@ -71,15 +54,12 @@ std::size_t TapeSplitter::GetInputTapeSize()
         while (!input_tape.Eof())
         {
             input_tape.Read(tmp_buf, 1);
-            std::cout << "ASDASDAS" << std::endl;
-            std::cout << tmp_buf.empty() << std::endl;
-            
             ++tape_size;
         }
     }
     else 
     {
-        std::cout << "failed to open file" << std::endl;
+        std::cerr << "failed to open file" << std::endl;
     }
 
     return tape_size;

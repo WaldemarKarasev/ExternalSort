@@ -1,14 +1,7 @@
-set(TASK_TARGET task)
+set(TARGET external_sort)
 
-get_filename_component(LIB_INCLUDE_PATH ".." ABSOLUTE)
-get_filename_component(LIB_PATH "." ABSOLUTE)
 
-file(GLOB_RECURSE LIB_CXX_SOURCES ${LIB_PATH}/*.cpp )
-file(GLOB_RECURSE LIB_HEADERS ${LIB_PATH}/*.hpp)
+add_executable(${TARGET} ${LIB_CXX_SOURCES} main.cpp)
+target_include_directories(${TARGET} PUBLIC ${SORT_INCLUDE_PATH})
 
-message(${LIB_INCLUDE_PATH})
-
-add_executable(${TASK_TARGET} ${LIB_CXX_SOURCES} ${LIB_HEADERS})
-target_include_directories(${TASK_TARGET} PUBLIC ${LIB_INCLUDE_PATH})
-
-target_link_libraries(${TASK_TARGET} nlohmann_json::nlohmann_json)
+target_link_libraries(${TARGET} external_sort_lib nlohmann_json::nlohmann_json)

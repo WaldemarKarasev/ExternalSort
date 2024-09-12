@@ -22,8 +22,10 @@ private:
 private:
     std::size_t ram_percentage_{50}; // default value is 50% of input file(tape)
     std::filesystem::path input_file_path_;
-    std::filesystem::path tmp_tape_path_;
     std::size_t input_tape_file_size_;
+
+    inline static const std::filesystem::path tmp_tape_path_ = std::filesystem::path("/tmp/tapes/"); // default path for storing temporary tapes
+
 };
 
 } // namespace service

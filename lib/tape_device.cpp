@@ -36,23 +36,19 @@ void TapeDevice::MoveMagnetHeadRightRead()
     file_.getline(number, sizeof(number), cell_delim_);
 
     auto prev_pos = file_.tellp();
-    file_.get(); // try eof ????
+    file_.get(); // try got get eof from fstream ????
     if (file_.eof())
     {
-        // PrintFileState();
         file_.clear();
         file_.setstate(std::ios_base::eofbit);
-        // PrintFileState();
     }
     else
     {
         file_.seekp(prev_pos);
-        // PrintFileState();
         ++magnet_head_pos_;
     }
 
     MoveLatency(1);
-    // std::cout << "MoveMagnetHeadRight() - end" << std::endl;
 }
 
 void TapeDevice::MoveMagnetHeadRightWrite()
@@ -68,7 +64,6 @@ void TapeDevice::MoveMagnetHeadRightWrite()
     ++magnet_head_pos_;
 
     MoveLatency(1);
-    // std::cout << "MoveMagnetHeadRight() - end" << std::endl;
 }
 
 
@@ -80,8 +75,6 @@ TapeDevice::size_type TapeDevice::GetMagnetHeadPosition() // tell position of th
 // Cell operations
 std::optional<int> TapeDevice::ReadCurrentCell()
 {
-    // std::cout << "ReadCurrentCell()" << std::endl;
-
     if (file_.eof())
     {
         return std::nullopt;
@@ -97,7 +90,6 @@ std::optional<int> TapeDevice::ReadCurrentCell()
     file_.getline(number, sizeof(number), cell_delim_);
     try {
         cell_value = std::stoi(number);
-        // std::cout << "cell_str=\"" << number << "\"; cell_value=" << cell_value.value() << std::endl;
     }
     catch(const std::exception& e)
     {
@@ -113,8 +105,6 @@ std::optional<int> TapeDevice::ReadCurrentCell()
 }
 void TapeDevice::WriteCurrentCell(int data)
 {
-    // std::cout << "WriteCurrentCell() - start" << std::endl;
-
     // Remembering prev std::fstream streampos for current "cell"
     auto prev_pos = file_.tellp();
     
@@ -128,7 +118,6 @@ void TapeDevice::WriteCurrentCell(int data)
     file_.seekp(prev_pos);
     
     WriteLatency();
-    // std::cout << "WriteCurrentCell() - end" << std::endl;
 }
 
 static void Wait(std::chrono::milliseconds wait_time)
@@ -205,7 +194,6 @@ void TapeDevice::RewindMagnetHead(streampos pos) // move seekp to std::ios::end 
         // Move to the begining. This used only when algorithm needs to rewrite all data in the tape
         // that's why in this implementation TapeDevice will erase all data from file
         // to avoid aliasing of new and old data in file
-        std::cout << "RewindMagnetHead" << std::endl;
         file_.close();
         file_.open(path_, std::ios::in | std::ios::out | std::ios::trunc);
         MoveLatency(magnet_head_pos_);

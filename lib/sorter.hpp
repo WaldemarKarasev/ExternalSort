@@ -31,8 +31,9 @@ private:
     };
 
 public:
-    Sorter(std::filesystem::path temp_tapes_dir, std::size_t batch_size)
+    Sorter(std::filesystem::path temp_tapes_dir, std::filesystem::path output_tape, std::size_t batch_size)
         : temp_tapes_dir_(std::move(temp_tapes_dir))
+        , output_path_(std::move(output_tape))
         , batch_size_(batch_size)
     {}
 
@@ -43,7 +44,7 @@ private:
 
 private:
     std::filesystem::path temp_tapes_dir_;
-    std::filesystem::path output_sorted_file_path_;
+    std::filesystem::path output_path_;
     std::size_t batch_size_;
 };
 

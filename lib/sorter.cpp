@@ -1,6 +1,3 @@
-#include <sorter.hpp>
-
-
 // std
 #include <algorithm>
 #include <filesystem>
@@ -8,8 +5,9 @@
 #include <queue>
 
 // tape include
-#include <tape_file.hpp>
 #include <settings.hpp>
+#include <sorter.hpp>
+#include <tape_file.hpp>
 
 namespace algo {
 
@@ -28,25 +26,18 @@ std::filesystem::path Sorter::Sort()
     // iterate and sort
     for (auto& path : std::filesystem::directory_iterator(temp_tapes_dir_))
     {
-        std::cout << "AAAAAA - " << path << std::endl;
         io::TapeFile temp_tape(path);
         io::TapeFile::buffer_type buffer;
         temp_tape.Read(buffer, batch_size_);
 
-        std::cout << "Printing buffer before sorting" << std::endl;
-        Print(buffer);
-
         std::sort(buffer.begin(), buffer.end());
         
-        std::cout << "Printing buffer after sorting" << std::endl;
-        Print(buffer);
         temp_tape.Seekp(0); // move magnet head to the start of the tape
         temp_tape.Write(buffer, buffer.size());
     }
 
-    // merge
+    // external merge
     Merge();
-    // Not implemented
     return {};
 }
 
@@ -71,14 +62,17 @@ void Sorter::Merge()
             if (!tmp_vec.empty())
             {
                 HeapNode node = {tmp_vec.front(), i};
-                std::cout << node.value_ << " " << node.index_ << std::endl; 
+                // std::cout << node.value_ << " " << node.index_ << std::endl; 
                 priority_heap.push(node);
             }
         }
     }
 
-    output_sorted_file_path_ = std::filesystem::current_path() / "result.tape";
-    io::TapeFile output_sorted_tape(output_sorted_file_path_, std::ios::out | std::ios::trunc);
+    if (output_path_.empty())
+    {
+        output_path_ = std::filesystem::current_path() / "result.tape"; // just in case ??? 
+    }
+    io::TapeFile output_sorted_tape(output_path_, std::ios::out | std::ios::trunc);
     while (!priority_heap.empty())
     {
         HeapNode node = priority_heap.top();
@@ -86,7 +80,6 @@ void Sorter::Merge()
         auto value = node.value_;
         auto index = node.index_;
 
-        std::cout << "value=" << value << "; index=" << index << std::endl;
         {
             io::TapeFile::buffer_type tmp_vec{value};
             output_sorted_tape.Write(tmp_vec, 1);
@@ -100,7 +93,6 @@ void Sorter::Merge()
             priority_heap.push(read_node);
         }
     }
-    std::cout << "End merging temporary tape files" << std::endl;
 }
 
 } // namespace algo

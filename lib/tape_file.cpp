@@ -13,9 +13,7 @@ TapeFile::TapeFile(std::filesystem::path tape_path, std::ios::openmode mode, con
 }
 
 void TapeFile::Read(buffer_type& dst, size_type size)
-{
-    // std::cout << "TapeFile::Read()" << std::endl;
-     
+{     
     dst.clear(); // clear destination buffer
     for (size_type i = 0; i < size; ++i)
     {

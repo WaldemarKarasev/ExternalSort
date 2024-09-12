@@ -1,0 +1,6 @@
+{
+    "read_latency_ms":      1000, 
+    "write_latency_ms":     1000,    
+    "move_latency_ms":      1000, 
+    "mem_usage_percentages": 20  
+}
