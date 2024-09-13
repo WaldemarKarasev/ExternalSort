@@ -21,12 +21,10 @@ inline nlohmann::json ParseJsonFromFile(std::filesystem::path path)
 {
     nlohmann::json read_json;
     try {
-        std::cout << "AAA" << std::endl;
         std::ifstream file(path);
         read_json = nlohmann::json::parse(file);
         
     } catch (const nlohmann::detail::parse_error &err) {
-        std::cout << "BBB" << std::endl;
         return nlohmann::json::object();
     }
     return read_json;

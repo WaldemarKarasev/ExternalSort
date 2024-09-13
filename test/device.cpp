@@ -3,6 +3,7 @@
 
 TEST(TapeDevice, JustWorks)
 {
+    FAIL() << "There are no test for the io::TapeDevice is written";
 
 }
 

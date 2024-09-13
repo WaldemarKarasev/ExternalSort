@@ -23,8 +23,6 @@
 #include <tape_splitter.hpp>
 #include <sorter.hpp>
 
-nlohmann::json settings::global;
-
 int main(int argc, char* argv[])
 {
     // 1. Process input args

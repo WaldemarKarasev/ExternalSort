@@ -1,18 +1,18 @@
-add_executable(algo algo.cpp ${LIB_CXX_SOURCES} ${SORT_HEADERS})
+add_executable(algo algo.cpp)
 target_link_libraries(algo
     gtest
     nlohmann_json::nlohmann_json
     external_sort_lib
 )
 
-add_executable(device device.cpp ${LIB_CXX_SOURCES} ${SORT_HEADERS})
+add_executable(device device.cpp)
 target_link_libraries(device
     gtest
     nlohmann_json::nlohmann_json
     external_sort_lib
 )
 
-add_executable(file file.cpp ${LIB_CXX_SOURCES} ${SORT_HEADERS})
+add_executable(file file.cpp)
 target_link_libraries(file
     gtest
     nlohmann_json::nlohmann_json
