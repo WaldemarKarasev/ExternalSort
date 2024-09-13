@@ -18,8 +18,7 @@ TEST(External_Sort, JustWorks)
 {
     TapeFile file({-2, 3, 1, 5, 8, 43, 2, 6, 9});
 
-    algo::Sorter().Sort();
-
+    FAIL() << "There are no tests for External Sort algorithm";
 
 }
 
